@@ -16,7 +16,7 @@ function constructRegisterQuery(request) {
 
 function getQuery(api, request) {
     switch (api) {
-        case "register-user": return constructRegisterQuery(request);
+        case "register-user": return constructRegisterQuery(request); break;
         default: break;
     }
 }
