@@ -43,8 +43,6 @@ function validateMobile(number) {
 
 function validatePassword(password) {
     let regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    console.log(regex.test(password) ? true : false);
-    console.log('pass', password)
     return regex.test(password) ? true : false;
 }
 
