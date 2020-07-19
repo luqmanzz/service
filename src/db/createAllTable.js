@@ -4,7 +4,9 @@ const queries = {
     'users': `CREATE TABLE IF NOT EXISTS users (
         mobile_number DECIMAL(10) NOT NULL PRIMARY KEY,
         country_code VARCHAR(3) NOT NULL,
-        password VARCHAR (255) NOT NULL
+        password VARCHAR (255) NOT NULL,
+        OTP VARCHAR(255),
+        verified BOOLEAN NOT NULL DEFAULT FALSE
         );`
 };
 
