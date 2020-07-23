@@ -61,7 +61,7 @@ export default function router(app) {
             res.send(result);
         } else {
             getOTP('verify-otp', req).then((resp) => {
-                if (resp) {
+                if (resp === true) {
                     const result = {
                         status: 'success',
                         message: 'mobile number verified'
