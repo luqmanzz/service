@@ -21,7 +21,7 @@ function constructOTPquery(request) {
     const otp = body.OTP;
     return {
         'users': `UPDATE users
-        SET otp = ${otp}
+        SET otp = '${otp}'
         WHERE mobile_number = ${mobile};`
     };
 }
@@ -53,6 +53,18 @@ function executeDeleteOTP(request) {
     }, 15 * 60 * 1000); // have to check if this need to be consoled for failure in otp removal [internal]
 }
 
+function saveOTP(request) {
+    let query = constructOTPquery(request);
+    query = query[Object.keys(query)[0]];
+    return execute('users', query)
+        .then((resp) => {
+            executeDeleteOTP(request);
+            return resp;
+        }).catch(err => {
+            console.log('failed to delete OTP: ', err);
+        });
+}
+
 function InsertData(api, request) {
     let query = getQuery(api, request);
     const tableName = Object.keys(query)[0];
@@ -69,6 +81,8 @@ function InsertData(api, request) {
                 return execute(tableName, query).then((resp) => {
                     executeDeleteOTP(request);
                     return resp;
+                }).catch(err => {
+                    console.log('failed to delete OTP: ', err);
                 });
             } else {
                 return err;
@@ -87,4 +101,7 @@ function execute(tableName, query) {
         });
 }
 
-export default InsertData;
+export {
+    InsertData,
+    saveOTP
+};
