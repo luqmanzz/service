@@ -26,6 +26,16 @@ function constructOTPquery(request) {
     };
 }
 
+function constructSetVerified(request) {
+    const body = request.body;
+    const mobile = body.mobile_number;
+    return {
+        'users': `UPDATE users
+        SET verified = true
+        WHERE mobile_number = ${mobile};`
+    }
+}
+
 function constructDeleteOTPQuery(request) {
     const body = request.body;
     const mobile = body.mobile_number;
@@ -88,12 +98,28 @@ async function executeGetQuery(tableName, query) {
 }
 
 function getOTP(api, request) {
+    const otp = request.body.otp;
     let query = getQuery(api, request);
-    const tableName = Object.keys(query)[0];
+    let tableName = Object.keys(query)[0];
     query = query[tableName];
     return executeGetQuery(tableName, query)
         .then((resp) => {
-            return new Promise((resolve, reject) => { resolve(resp && resp[0]) });
+            const dbOTP = resp && resp[0] && resp[0].otp;
+            if (dbOTP === otp) {
+                query = constructSetVerified(request);
+                let tableName = Object.keys(query)[0];
+                query = query[tableName];
+                return execute(tableName, query)
+                    .then(() => {
+                        return new Promise((resolve, reject) => { resolve(true) });
+                    }).catch(err => {
+                        return new Promise((resolve, reject) => { reject(err) });
+                    });
+            } else if (!dbOTP) {
+                return new Promise((resolve, reject) => { resolve('noRecord') });
+            } else {
+                return new Promise((resolve, reject) => { resolve(false) });
+            }
         }).catch(err => {
             console.log('failed to fetch otp from users for ', request.body.OTP);
             return new Promise((resolve, reject) => { reject(err) });
