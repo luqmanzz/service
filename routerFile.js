@@ -1,10 +1,11 @@
 // all the router code will be placed here
-import InsertData from './src/db/CRUD.js';
+import { InsertData, saveOTP } from './src/db/CRUD.js';
 import validate from './src/login/validate.js';
 import sendOTP from './src/login/sendOTP.js';
 
-function unknownResponse(res) {
-    const errorMessage = 'Unknown error occured';
+function unknownResponse(res, additionalMsg) {
+    const error = 'Unknown error occured';
+    const errorMessage = !additionalMsg ? error : `${additionalMsg} and internal ${error}`;
     const result = {
         status: 'failure',
         message: errorMessage,
@@ -17,6 +18,37 @@ export default function router(app) {
 
     app.get('/', (req, res) => {
         res.send('Hello World!');
+    });
+
+    app.get('/send-otp', (req, res) => {
+        let checkParam = validate('send-otp', req);
+        if (Object.keys(checkParam).includes('false')) {
+            const result = {
+                status: 'failure',
+                message: checkParam[Object.keys(checkParam)]
+            }
+            res.send(result);
+        } else {
+            const number = `${req.body.mobile_number}`;
+            sendOTP(number).then((resp) => {
+                req.body.OTP = resp;
+                saveOTP(req).then(() => {
+                    const result = {
+                        status: 'success',
+                        message: 'An OTP has been sent to your device'
+                    }
+                    res.send(result);
+                }).catch(() => {
+                    unknownResponse(res, 'OTP Sent');
+                });
+            }).catch(() => {
+                const result = {
+                    status: 'failure',
+                    message: 'OTP failed to send'
+                }
+                res.send(result);
+            });
+        }
     });
 
     app.post('/register-user', (req, res) => {
@@ -36,12 +68,12 @@ export default function router(app) {
                     InsertData("register-user", req).then(response => {
                         const result = {
                             status: 'success',
-                            message: 'an OTP has been sent to your device',
+                            message: 'An OTP has been sent to your device',
                             otp_status: 'successful'
                         }
                         res.send(result);
                     }).catch(() => {
-                        unknownResponse(res);
+                        unknownResponse(res, 'OTP Sent');
                     });
                 }).catch(() => {
                     const result = {
