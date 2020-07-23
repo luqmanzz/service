@@ -30,6 +30,18 @@ function validateUser(request) {
     });
 }
 
+function validateNumberAndCode(request) {
+    const body = request.body;
+    const mobile = body.mobile_number;
+    const countryCode = body.country_code;
+    if (validateCountryCode(countryCode)) {
+        return (!validateMobile(mobile) ? { false: 'Please enter a valid device number' }
+            : { true: 'OK' });
+    } else {
+        return { false: 'country code is invalid' };
+    }
+}
+
 function validateVerifyOTP(request) {
     const body = request.body;
     const mobile = body.mobile_number;
