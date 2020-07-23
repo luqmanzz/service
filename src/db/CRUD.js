@@ -38,7 +38,8 @@ function constructDeleteOTPQuery(request) {
 
 function getQuery(api, request) {
     switch (api) {
-        case "register-user": return constructRegisterQuery(request); break;
+        case "register-user": return constructRegisterQuery(request);
+        case "send-otp": return constructOTPquery(request);
         default: break;
     }
 }
@@ -53,8 +54,8 @@ function executeDeleteOTP(request) {
     }, 15 * 60 * 1000); // have to check if this need to be consoled for failure in otp removal [internal]
 }
 
-function saveOTP(request) {
-    let query = constructOTPquery(request);
+function saveOTP(api, request) {
+    let query = getQuery(api, request);
     query = query[Object.keys(query)[0]];
     return execute('users', query)
         .then((resp) => {
