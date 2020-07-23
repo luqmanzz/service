@@ -27,6 +27,6 @@ export default function sendOTP(number) {
 }
 
 function generateOTP() {
-    const otp = parseInt(Math.floor(100000 + Math.random() * 900000).toString().substr(0, 4));  // generates a random 4 digit number
+    const otp = parseInt(Math.floor(100000 + Math.random() * 900000));  // generates a random 6 digit number
     return otp;
 }
