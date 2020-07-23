@@ -1,17 +1,17 @@
 import executeQuery from '../db/executeQuery.js';
 
 async function validateUser(request) {
-    var body = request.body;
-    let mobile = body.mobile_number;
-    let countryCode = body.country_code;
-    let password = body.password;
+    const body = request.body;
+    const mobile = body.mobile_number;
+    const countryCode = body.country_code;
+    const password = body.password;
     const getVerified = constructVerifiedQuery(request);
     return await executeQuery('users', getVerified).then((resp) => {
         const result = (resp && resp.rows && resp.rows[0].verified === false) ? false : true;
         if (!result) {
             return !validateCountryCode(countryCode) ? { false: 'country code is invalid' } :
                 (
-                    !validateMobile(mobile) ? { false: 'mobile number is invalid' } :
+                    !validateMobile(mobile) ? { false: 'Please enter a valid device number' } :
                         (!validatePassword(password) ? { false: `password doesn't match password policy` } : { true: 'OK' })
                 );
         } else {
@@ -25,6 +25,17 @@ async function validateUser(request) {
             false: `unknown error occured`
         });
     });
+}
+
+function validateNumberAndCode(request) {
+    const body = request.body;
+    const mobile = body.mobile_number;
+    const countryCode = body.country_code;
+    if (validateCountryCode(countryCode)) {
+        return (!validateMobile(mobile) ? { false: 'Please enter a valid device number' } : { true: 'OK' });
+    } else {
+        return { false: 'country code is invalid' };
+    }
 }
 
 function constructVerifiedQuery(request) {
@@ -49,6 +60,8 @@ function validatePassword(password) {
 export default function validate(api, request) {
     switch (api) {
         case "register-user": return validateUser(request);
+        case "send-otp": return validateNumberAndCode(request);
+        case "verify-otp": return validateNumberAndCode(request);
         default: break;
     }
 }
