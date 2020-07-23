@@ -1,13 +1,16 @@
-import executeQuery from '../db/executeQuery.js';
+import { executeGetQuery } from '../db/CRUD.js';
 
-async function validateUser(request) {
+function validateUser(request) {
     const body = request.body;
     const mobile = body.mobile_number;
     const countryCode = body.country_code;
     const password = body.password;
     const getVerified = constructVerifiedQuery(request);
-    return await executeQuery('users', getVerified).then((resp) => {
-        const result = (resp && resp.rows && resp.rows[0].verified === false) ? false : true;
+    return executeGetQuery('users', getVerified).then((resp) => {
+        let result = (resp[0] && resp[0].verified === false) ? false : true;
+        if (!Object.keys(resp).length) {
+            result = false;
+        }
         if (!result) {
             return !validateCountryCode(countryCode) ? { false: 'country code is invalid' } :
                 (
@@ -27,15 +30,21 @@ async function validateUser(request) {
     });
 }
 
-function validateNumberAndCode(request) {
+function validateVerifyOTP(request) {
     const body = request.body;
     const mobile = body.mobile_number;
     const countryCode = body.country_code;
+    const otp = body.otp;
     if (validateCountryCode(countryCode)) {
-        return (!validateMobile(mobile) ? { false: 'Please enter a valid device number' } : { true: 'OK' });
+        return (!validateMobile(mobile) ? { false: 'Please enter a valid device number' }
+            : (!isValidOTP(otp) ? { false: 'Please enter a six digit OTP' } : { true: 'OK' }));
     } else {
         return { false: 'country code is invalid' };
     }
+}
+
+function isValidOTP(otp) {
+    return (!isNaN(otp) && otp.length === 6) ? true : false;
 }
 
 function constructVerifiedQuery(request) {
@@ -61,7 +70,7 @@ export default function validate(api, request) {
     switch (api) {
         case "register-user": return validateUser(request);
         case "send-otp": return validateNumberAndCode(request);
-        case "verify-otp": return validateNumberAndCode(request);
+        case "verify-otp": return validateVerifyOTP(request);
         default: break;
     }
 }
