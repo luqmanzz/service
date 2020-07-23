@@ -36,10 +36,21 @@ function constructDeleteOTPQuery(request) {
     };
 }
 
+function constructGetOTPQuery(request) {
+    const body = request.body;
+    const mobile = body.mobile_number;
+    return {
+        'users': `select otp
+        from users
+        WHERE mobile_number = ${mobile};`
+    };
+}
+
 function getQuery(api, request) {
     switch (api) {
         case "register-user": return constructRegisterQuery(request);
         case "send-otp": return constructOTPquery(request);
+        case "verify-otp": return constructGetOTPQuery(request);
         default: break;
     }
 }
@@ -56,13 +67,36 @@ function executeDeleteOTP(request) {
 
 function saveOTP(api, request) {
     let query = getQuery(api, request);
-    query = query[Object.keys(query)[0]];
-    return execute('users', query)
+    const tableName = Object.keys(query)[0];
+    query = query[tableName];
+    return execute(tableName, query)
         .then((resp) => {
             executeDeleteOTP(request);
             return resp;
         }).catch(err => {
             console.log('failed to delete OTP: ', err);
+        });
+}
+
+async function executeGetQuery(tableName, query) {
+    return await executeQuery(tableName, query).then((resp) => {
+        return new Promise((resolve, reject) => { resolve(resp && resp.rows) });
+    }).catch(err => {
+        console.log(`error occured when getting data from ${tableName}`, err);
+        return new Promise((resolve, reject) => { reject(err) });
+    });
+}
+
+function getOTP(api, request) {
+    let query = getQuery(api, request);
+    const tableName = Object.keys(query)[0];
+    query = query[tableName];
+    return executeGetQuery(tableName, query)
+        .then((resp) => {
+            return new Promise((resolve, reject) => { resolve(resp && resp[0]) });
+        }).catch(err => {
+            console.log('failed to fetch otp from users for ', request.body.OTP);
+            return new Promise((resolve, reject) => { reject(err) });
         });
 }
 
@@ -104,5 +138,7 @@ function execute(tableName, query) {
 
 export {
     InsertData,
-    saveOTP
+    saveOTP,
+    executeGetQuery, //for globally getting data
+    getOTP
 };
