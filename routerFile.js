@@ -61,14 +61,13 @@ export default function router(app) {
             res.send(result);
         } else {
             getOTP('verify-otp', req).then((resp) => {
-                const dbOTP = resp && resp.otp;
-                if (dbOTP === req.body.otp) {
+                if (resp) {
                     const result = {
                         status: 'success',
                         message: 'mobile number verified'
                     }
                     res.send(result);
-                } else if (!resp) {
+                } else if (resp === 'noRecord') {
                     const result = {
                         status: 'failure',
                         message: 'number does not exist in records'
