@@ -32,7 +32,7 @@ export default function router(app) {
             const number = `${req.body.mobile_number}`;
             sendOTP(number).then((resp) => {
                 req.body.OTP = resp;
-                saveOTP(req).then(() => {
+                saveOTP('send-otp', req).then(() => {
                     const result = {
                         status: 'success',
                         message: 'An OTP has been sent to your device'
@@ -49,6 +49,10 @@ export default function router(app) {
                 res.send(result);
             });
         }
+    });
+
+    app.get('/verify-otp', (req, res) => {
+        res.send('Hello World!');
     });
 
     app.post('/register-user', (req, res) => {
